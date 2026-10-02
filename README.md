@@ -1,6 +1,8 @@
 # Expediente Judicial Digital — MVP
 
-**Caso 1: Congestión Judicial (Órgano Judicial de Panamá)** · Tópicos Especiales I · Equipo 1
+**Caso 1: Congestión Judicial (Órgano Judicial de Panamá)** · Ingeniería de Software III · Equipo 1
+
+> **¿Primera vez? Sigue la [guía de instalación del equipo](SETUP.md).**
 
 Sistema para digitalizar expedientes judiciales con trazabilidad completa, control de acceso por roles
 y bitácora de auditoría a prueba de manipulación.
