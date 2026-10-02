@@ -1,0 +1,72 @@
+# PB-07 — Pipeline CI/CD: pruebas (Robot Framework) -> imagen Docker -> despliegue en Kubernetes -> pruebas contra el cluster
+name: CI-CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    name: Calidad · Robot Framework
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - name: Levantar API (SQLite)
+        run: |
+          uvicorn app.main:app --port 8000 &
+          for i in $(seq 1 30); do curl -sf localhost:8000/healthz && break; sleep 1; done
+      - name: Ejecutar Robot Framework
+        run: robot --outputdir results/local --xunit xunit.xml tests/robot
+      - name: Publicar reporte (evidencia de calidad)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: robot-local, path: results/local}
+
+  desplegar-staging:
+    name: DevOps · Docker + Kubernetes (kind)
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Crear cluster Kubernetes de staging
+        uses: helm/kind-action@v1
+        with: {cluster_name: staging}
+      - name: Construir imagen
+        run: docker build -t expediente-api:${{ github.sha }} .
+      - name: Cargar imagen al cluster
+        run: kind load docker-image expediente-api:${{ github.sha }} --name staging
+      - name: Desplegar
+        run: |
+          kubectl apply -f k8s/00-namespace.yaml
+          PASS=$(openssl rand -hex 16)
+          kubectl -n expediente-judicial create secret generic app-secrets \
+            --from-literal=JWT_SECRET=$(openssl rand -hex 32) \
+            --from-literal=POSTGRES_PASSWORD=$PASS \
+            --from-literal=DATABASE_URL=postgresql+psycopg://judicial:$PASS@postgres:5432/expedientes
+          kubectl apply -f k8s/01-configmap.yaml
+          kubectl apply -f k8s/02-postgres.yaml
+          kubectl -n expediente-judicial rollout status statefulset/postgres --timeout=180s
+          kubectl apply -f k8s/03-app.yaml
+          kubectl -n expediente-judicial set image deployment/expediente-api api=expediente-api:${{ github.sha }}
+          kubectl -n expediente-judicial rollout status deployment/expediente-api --timeout=180s
+          kubectl -n expediente-judicial get pods -o wide
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install robotframework robotframework-requests
+      - name: Pruebas contra el cluster (PostgreSQL real)
+        run: |
+          kubectl -n expediente-judicial port-forward svc/expediente-api 8080:80 &
+          for i in $(seq 1 30); do curl -sf localhost:8080/healthz && break; sleep 1; done
+          robot --variable BASE_URL:http://localhost:8080 --outputdir results/staging tests/robot
+      - name: Logs si algo falla
+        if: failure()
+        run: kubectl -n expediente-judicial logs -l app=expediente-api --tail=100
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: robot-staging, path: results/staging}

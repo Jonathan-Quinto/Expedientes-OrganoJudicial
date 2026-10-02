@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expediente-api
+  namespace: expediente-judicial
+  labels: {app: expediente-api}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: expediente-api}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}   # despliegue sin caída
+  template:
+    metadata:
+      labels: {app: expediente-api}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: api
+          image: expediente-api:latest   # el pipeline lo reemplaza por la imagen con el SHA del commit
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8000}]
+          envFrom:
+            - configMapRef: {name: app-config}
+          env:
+            - name: JWT_SECRET
+              valueFrom: {secretKeyRef: {name: app-secrets, key: JWT_SECRET}}
+            - name: DATABASE_URL
+              valueFrom: {secretKeyRef: {name: app-secrets, key: DATABASE_URL}}
+          readinessProbe:
+            httpGet: {path: /healthz, port: 8000}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8000}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: expediente-api
+  namespace: expediente-judicial
+spec:
+  type: NodePort
+  selector: {app: expediente-api}
+  ports:
+    - port: 80
+      targetPort: 8000
+      nodePort: 30080

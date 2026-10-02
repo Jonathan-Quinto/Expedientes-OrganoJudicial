@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Expediente Judicial Digital</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="marca">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#3ee0c0" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
+    <div><b>Expediente Judicial Digital</b><small>Órgano Judicial · República de Panamá</small></div>
+  </div>
+  <div id="sesion" class="sesion hidden"><span id="quien"></span><button class="btn-sec" id="btn-salir" type="button">Salir</button></div>
+</header>
+<nav id="nav" class="nav hidden" aria-label="Secciones"></nav>
+
+<main>
+  <!-- INICIO DE SESIÓN (HU-02) -->
+  <section id="v-login" class="login">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="eyebrow">Caso 1 · Congestión judicial</div>
+      <h1>De papel a evidencia digital</h1>
+      <p>Cada expediente nace digital. Cada actuación queda registrada con quién, cuándo y qué cambió. Cada rol ve solo lo que le corresponde.</p>
+      <div class="pilares"><span>Trazabilidad</span><span>Control por roles</span><span>Auditoría + seguridad</span></div>
+    </div>
+    <form id="f-login" class="caja-login">
+      <h2 style="font-size:20px">Acceso de funcionarios</h2>
+      <label class="campo" for="l-user">Usuario<input id="l-user" autocomplete="username" placeholder="secretario1, juez1 o admin1" required></label>
+      <label class="campo" for="l-pass">Contraseña<input id="l-pass" type="password" autocomplete="current-password" required></label>
+      <div id="l-error" class="error" role="alert"></div>
+      <button id="btn-login" class="btn" type="submit">Entrar</button>
+      <div class="pie">¿Eres ciudadano? <a href="/consulta">Consulta el estado de tu proceso</a></div>
+    </form>
+  </section>
+
+  <!-- BANDEJA (secretario / juez / admin) -->
+  <section id="v-bandeja" class="hidden" style="display:flex;flex-direction:column;gap:20px">
+    <div class="fila">
+      <div><h1 id="b-titulo">Bandeja de expedientes</h1><div id="b-sub" class="sub"></div></div>
+      <label class="campo" for="buscar" style="min-width:260px">Buscar<input id="buscar" placeholder="Número o nombre de una parte"></label>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Expedientes</span><b id="st-total">0</b></div>
+      <div class="stat"><span>En trámite o audiencia</span><b id="st-activos">0</b></div>
+      <div class="stat alerta"><span>Plazos por vencer</span><b id="st-alertas">0</b></div>
+    </div>
+
+    <form id="f-nuevo" class="panel hidden">
+      <h2>Registrar expediente</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end">
+        <label class="campo" for="n-materia">Materia<select id="n-materia" name="materia"><option value="civil">Civil</option><option value="familia">Familia</option><option value="laboral">Laboral</option><option value="penal">Penal</option></select></label>
+        <label class="campo" for="n-dte">Demandante<input id="n-dte" name="demandante" placeholder="Nombre completo" required></label>
+        <label class="campo" for="n-ddo">Demandado<input id="n-ddo" name="demandado" placeholder="Nombre completo" required></label>
+        <label class="campo" for="sel-juez">Juez asignado<select id="sel-juez" name="juez_id"></select></label>
+        <label class="campo" for="n-plazo">Próximo plazo<input id="n-plazo" name="fecha_limite" type="date"></label>
+        <button class="btn" type="submit">Registrar</button>
+      </div>
+      <div id="n-msg" role="status"></div>
+    </form>
+
+    <div class="tabla">
+      <table>
+        <thead><tr><th>Número</th><th>Materia</th><th>Partes</th><th>Estado</th><th>Próximo plazo</th><th></th></tr></thead>
+        <tbody id="tabla"></tbody>
+      </table>
+      <div id="sin-res" class="vacio hidden">Ningún expediente coincide con la búsqueda.</div>
+    </div>
+  </section>
+
+  <!-- DETALLE (HU-05) -->
+  <section id="v-detalle" class="hidden" style="display:flex;flex-direction:column;gap:18px">
+    <button id="btn-volver" class="btn-link" type="button" style="align-self:flex-start;text-decoration:none">← Volver a la bandeja</button>
+    <div class="fila" style="align-items:start">
+      <div>
+        <div id="d-numero" class="mono" style="color:var(--acento)"></div>
+        <h1 id="d-partes"></h1>
+        <div id="d-info" class="sub"></div>
+      </div>
+      <span id="d-estado" class="chip"></span>
+    </div>
+    <div class="detalle-grid">
+      <div class="panel">
+        <h2>Historial de actuaciones</h2>
+        <ol id="d-timeline" class="timeline"></ol>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div id="p-juez" class="panel hidden">
+          <h2>Decisión del juez</h2>
+          <label class="campo" for="d-nuevo">Nuevo estado<select id="d-nuevo"><option value="en_tramite">En trámite</option><option value="en_audiencia">En audiencia</option><option value="con_sentencia">Con sentencia</option><option value="archivado">Archivado</option></select></label>
+          <label class="campo" for="d-motivo">Motivo (obligatorio)<input id="d-motivo" placeholder="Ej. Se admite la demanda"></label>
+          <div id="d-error" class="error" role="alert"></div>
+          <button id="btn-estado" class="btn" type="button">Cambiar estado</button>
+        </div>
+        <div id="p-actuacion" class="panel hidden">
+          <h2>Registrar actuación</h2>
+          <label class="campo" for="a-tipo">Tipo<input id="a-tipo" placeholder="Notificación, auto, audiencia…"></label>
+          <label class="campo" for="a-detalle">Detalle<input id="a-detalle" placeholder="Descripción de la actuación"></label>
+          <button id="btn-act" class="btn-sec" type="button">Agregar actuación</button>
+        </div>
+        <div class="panel" style="gap:6px">
+          <h2>Consulta ciudadana</h2>
+          <div class="sub">Las partes consultan con el número de expediente y su código.</div>
+          <div class="sub" style="font-size:12px">Con número + código el ciudadano ve solo el estado, sin nombres.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDITORÍA (HU-03, admin) -->
+  <section id="v-auditoria" class="hidden" style="display:flex;flex-direction:column;gap:18px">
+    <div class="fila">
+      <div><h1>Bitácora de auditoría</h1><div class="sub">Cada acción queda encadenada con un hash SHA-256 del registro anterior.</div></div>
+      <button id="btn-verificar" class="btn-sec" type="button" style="min-height:44px">Verificar integridad</button>
+    </div>
+    <div id="a-integridad" role="status"></div>
+    <div class="tabla">
+      <table style="min-width:820px">
+        <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Antes → Después</th><th>Hash</th></tr></thead>
+        <tbody id="a-tabla"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="pie-app">
+  <span>MVP · Equipo 1 · Ingeniería de Software III</span>
+  <span>Python · Robot Framework · OpenVAS · Kubernetes</span>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

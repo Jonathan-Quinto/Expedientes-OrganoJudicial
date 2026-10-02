@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: expediente-judicial
+data:
+  ALERTA_DIAS: "5"
+  JWT_EXPIRE_MINUTES: "60"
+  SEED_DEMO: "1"          # en producción real: "0"

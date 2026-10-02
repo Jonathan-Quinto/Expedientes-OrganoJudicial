@@ -1,0 +1,10 @@
+.git
+.github
+tests
+k8s
+security
+docs
+*.db
+__pycache__
+.venv
+results

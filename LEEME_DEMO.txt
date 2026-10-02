@@ -1,0 +1,33 @@
+EXPEDIENTE JUDICIAL DIGITAL - DEMO DEL MVP
+==========================================
+
+COMO CORRERLO (Windows)
+1. Necesitas Python 3.10 o superior: https://www.python.org/downloads/
+   (al instalar, marca "Add Python to PATH").
+2. Descomprime esta carpeta.
+3. Doble clic en INICIAR_DEMO.bat
+   - La primera vez descarga dependencias (~1 minuto, necesita internet).
+   - Despues funciona sin internet.
+4. Se abre el navegador en http://localhost:8000
+
+USUARIOS (contrasena: Demo-Judicial-2026)
+  secretario1  -> registra expedientes, ve alertas de plazo
+  juez1        -> ve sus expedientes, cambia estados con motivo
+  juez2        -> otro juez (no ve los expedientes de juez1)
+  admin1       -> bitacora de auditoria y verificacion de integridad
+
+CONSULTA CIUDADANA
+  http://localhost:8000/consulta
+  Numero: EXP-2026-000001   Codigo: A1B2C3D4
+
+DOCUMENTACION DE LA API (Swagger)
+  http://localhost:8000/docs
+
+GUION DE DEMO (2 minutos)
+  1. Login con "intruso" -> error. Login con secretario1.
+  2. Registrar un expediente -> sale numero y codigo de consulta.
+  3. Salir. Entrar como juez1 -> abrir expediente -> cambiar estado con motivo.
+  4. Salir. Entrar como admin1 -> ver el cambio en la bitacora -> Verificar integridad.
+  5. Abrir /consulta con el numero y codigo -> estado sin nombres de las partes.
+
+Cada vez que se ejecuta INICIAR_DEMO.bat los datos vuelven al estado inicial.
