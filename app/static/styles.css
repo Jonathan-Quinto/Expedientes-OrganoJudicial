@@ -50,7 +50,7 @@ h2 { margin: 0; font-size: 17px; }
 .fila { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: end; }
 .mono { font-family: var(--mono); }
 
-label.campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--texto-3); }
+label.campo, div.campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--texto-3); }
 input, select { background: var(--campo); border: 1px solid var(--borde-fuerte); border-radius: 6px; padding: 10px 12px; color: var(--texto); min-height: 44px; width: 100%; }
 
 .btn { background: var(--acento); color: var(--acento-texto); border: 0; border-radius: 6px; padding: 10px 16px; font-weight: 700; min-height: 44px; }
@@ -116,6 +116,24 @@ tr:last-child td { border-bottom: 0; }
 
 .pie-app { border-top: 1px solid var(--borde); padding: 14px 24px; font-size: 12px; color: #7d8aa3; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; }
 
+.filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
+.filtros .error { grid-column: 1 / -1; }
+.grid-nuevo { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: start; }
+.grid-nuevo > .btn { align-self: end; }
+input[aria-invalid="true"] { border-color: var(--error); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--texto-3); padding: 8px 14px; min-height: 44px; font-weight: 500; }
+.tabs button[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--acento); font-weight: 600; }
+.timeline .sub { word-break: break-word; }
+
+@media (max-width: 600px) {
+  main { padding: 20px 14px 40px; }
+  .filtros, .grid-nuevo { grid-template-columns: 1fr; }
+  .fila > label.campo { min-width: 0 !important; width: 100%; }
+  .tabla { -webkit-overflow-scrolling: touch; }
+  .top, .nav, .pie-app { padding-left: 14px; padding-right: 14px; }
+  h1 { font-size: 22px; }
+}
 @media (max-width: 640px) {
   .stats { grid-template-columns: 1fr; }
   .login h1 { font-size: 32px; }
