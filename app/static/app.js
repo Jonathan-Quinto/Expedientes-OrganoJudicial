@@ -56,7 +56,7 @@ function pintarNav() {
     : [['bandeja', rol === 'juez' ? 'Mis expedientes' : rol === 'abogado' ? 'Mis casos' : 'Bandeja de expedientes']];
   nav.innerHTML = items.map(([v, t]) => `<button type="button" data-v="${v}" class="${vista === v || (v === 'bandeja' && vista === 'detalle') ? 'activo' : ''}">${ICONOS[v]}${t}</button>`).join('');
   nav.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => (b.dataset.v === 'auditoria' ? abrirAuditoria() : abrirBandeja())));
-  nav.classList.remove('hidden');
+  nav.classList.toggle('hidden', items.length < 2); // con una sola vista, la barra de comandos basta
 }
 
 // ---------- Sesión ----------
@@ -69,7 +69,8 @@ $('f-login').addEventListener('submit', async (e) => {
     $('quien').innerHTML = `${esc(nombre)} · <em>${esc(ROLES[rol] || rol)}</em>`;
     $('avatar').textContent = nombre.replace(/^(Lcd[oa]\.|Lic\.|Dr[a]?\.|Juez[a]?)\s+/i, '').split(/\s+/).slice(0, 2).map((x) => x[0] || '').join('').toUpperCase();
     $('sesion').classList.remove('hidden');
-    $('f-nuevo').classList.toggle('hidden', rol !== 'secretario');
+    $('btn-nuevo').classList.toggle('hidden', rol !== 'secretario');
+    $('cmd-abrir').classList.remove('hidden');
     $('l-f-juez').classList.toggle('hidden', !['secretario', 'admin'].includes(rol));
     if (rol === 'secretario') { cargarJueces(); cargarAbogados(); }
     else if (rol === 'admin') cargarJueces();
@@ -122,6 +123,7 @@ async function cargarBandeja() {
       <td class="${p.cls}" style="white-space:nowrap">${esc(p.txt)}</td>
       <td style="text-align:right"><button class="btn-abrir" type="button" data-id="${e.id}">Abrir</button></td></tr>`;
   }).join('');
+  pintarActivos();
   $('sin-res').textContent = qs ? 'Ningún expediente coincide con los filtros.' : 'No hay expedientes para mostrar.';
   $('sin-res').classList.toggle('hidden', lista.length > 0);
   document.querySelectorAll('#tabla .btn-abrir').forEach((b) => b.addEventListener('click', () => abrirDetalle(b.dataset.id)));
@@ -135,6 +137,24 @@ $('btn-limpiar').addEventListener('click', () => {
   ['f-estado', 'f-materia', 'f-juez', 'f-desde', 'f-hasta'].forEach((id) => { $(id).value = ''; });
   cargarBandeja();
 });
+
+// Filtros activos como chips que se quitan con un clic
+const FILTROS = [['f-estado', 'Estado', (v) => ESTADOS[v]], ['f-materia', 'Materia', materia], ['f-juez', 'Juez', () => $('f-juez').selectedOptions[0]?.textContent],
+  ['f-desde', 'Desde', fecha], ['f-hasta', 'Hasta', fecha], ['buscar', 'Texto', (v) => `"${v}"`]];
+function pintarActivos() {
+  const act = FILTROS.filter(([id]) => $(id).value.trim() && !(id === 'f-juez' && $('l-f-juez').classList.contains('hidden')));
+  $('f-activos').innerHTML = act.map(([id, et, f]) => `<span class="filtro-chip">${esc(et)}: <b>${esc(f($(id).value.trim()))}</b><button type="button" data-quitar="${id}" aria-label="Quitar filtro ${esc(et)}">×</button></span>`).join('');
+  $('f-activos').querySelectorAll('[data-quitar]').forEach((b) => b.addEventListener('click', () => { $(b.dataset.quitar).value = ''; cargarBandeja(); }));
+  const n = act.filter(([id]) => id !== 'buscar').length;
+  $('btn-filtros').textContent = n ? `Filtros · ${n}` : 'Filtros';
+}
+function plegar(btn, panel, abrir = $(panel).classList.contains('hidden')) {
+  $(panel).classList.toggle('hidden', !abrir);
+  $(btn).setAttribute('aria-expanded', abrir);
+  $(btn).classList.toggle('activo', abrir);
+}
+$('btn-filtros').addEventListener('click', () => plegar('btn-filtros', 'f-filtros'));
+$('btn-nuevo').addEventListener('click', () => { plegar('btn-nuevo', 'f-nuevo'); if (!$('f-nuevo').classList.contains('hidden')) $('n-dte').focus(); });
 
 async function cargarJueces() {
   const j = await api('/api/jueces');
@@ -302,4 +322,125 @@ $('btn-verificar').addEventListener('click', async () => {
     ? `<div class="ok">Cadena íntegra: ${v.registros} registros verificados, ninguno alterado.</div>`
     : `<div class="ok mal">Bitácora alterada en el registro #${v.roto_en_id}.</div>`;
   cargarAuditoria();
+});
+
+// ---------- Barra de comandos (Ctrl/⌘ K) ----------
+// Punto de entrada principal: buscar expedientes, navegar, filtrar y ejecutar acciones.
+const ES_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+$('cmd-abrir').querySelector('.cmd-atajo').textContent = ES_MAC ? '⌘K' : 'Ctrl K';
+const ICO = {
+  exp: '<path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13M6.5 8.5h4M6.5 11h4"/>',
+  ir: '<path d="M2 8h11M9 4l4 4-4 4"/>',
+  mas: '<path d="M8 3v10M3 8h10"/>',
+  filtro: '<path d="M2 3h12l-4.5 5.5V13l-3-1.5v-3z"/>',
+  escudo: '<path d="M8 1.5 2.5 3.5v4c0 3.5 2.4 5.9 5.5 7 3.1-1.1 5.5-3.5 5.5-7v-4z"/><path d="m5.5 8 1.8 1.8L10.5 6.5"/>',
+  mazo: '<path d="m9 2 5 5M7.5 3.5l5 5M10.5 6 4 12.5M2 14h6"/>',
+  nota: '<path d="M3 13.5V11l8-8 2.5 2.5-8 8z"/><path d="M9.5 4.5 12 7"/>',
+  salir: '<path d="M6 2.5H3v11h3M10 5l3 3-3 3M13 8H6"/>',
+  globo: '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2.2 2 9.8 0 12M8 2c-2 2.2-2 9.8 0 12"/>',
+};
+const ico = (k) => `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]}</svg>`;
+const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+let cmdExp = [], cmdItems = [], cmdSel = 0, cmdVolver = null;
+
+async function enBandeja() { if (vista !== 'bandeja') await abrirBandeja(); }
+async function filtrar(id, v) { await enBandeja(); $(id).value = v; cargarBandeja(); }
+async function nuevoExpediente() { await enBandeja(); plegar('btn-nuevo', 'f-nuevo', true); $('n-dte').focus(); }
+
+function comandos() {
+  const c = [];
+  const add = (grupo, icono, titulo, accion, extra = {}) => c.push({ grupo, icono, titulo, accion, ...extra });
+  const bandeja = rol === 'juez' ? 'Mis expedientes' : rol === 'abogado' ? 'Mis casos' : rol === 'admin' ? 'Expedientes' : 'Bandeja de expedientes';
+  // Acciones del expediente abierto
+  if (vista === 'detalle' && actual) {
+    const n = actual.numero;
+    if (rol === 'juez') Object.entries(ESTADOS).filter(([k]) => k !== 'radicado' && k !== actual.estado).forEach(([k, t]) =>
+      add(`En ${n}`, 'mazo', `Cambiar estado a ${t}`, () => { $('d-nuevo').value = k; $('d-motivo').focus(); }, { sub: 'Pide el motivo antes de guardar', claves: 'decision juez' }));
+    if (['secretario', 'abogado'].includes(rol)) add(`En ${n}`, 'nota', rol === 'abogado' ? 'Registrar escrito' : 'Registrar actuación', () => $('a-tipo').focus(), { claves: 'actuacion nota agregar' });
+    if (rol !== 'abogado') add(`En ${n}`, 'escudo', 'Ver auditoría de este expediente', () => selTab('auditoria'), { claves: 'historial bitacora' });
+    add(`En ${n}`, 'ir', 'Volver a la bandeja', abrirBandeja);
+  }
+  // Acciones generales
+  if (rol === 'secretario') add('Acciones', 'mas', 'Registrar expediente nuevo', nuevoExpediente, { claves: 'crear nuevo radicar', atajo: 'N' });
+  if (rol === 'admin') add('Acciones', 'escudo', 'Verificar integridad de la bitácora', async () => { if (vista !== 'auditoria') await abrirAuditoria(); $('btn-verificar').click(); }, { claves: 'hash cadena auditoria' });
+  add('Ir a', 'ir', bandeja, abrirBandeja, { claves: 'bandeja expedientes inicio' });
+  if (rol === 'admin') add('Ir a', 'escudo', 'Bitácora de auditoría', abrirAuditoria, { claves: 'auditoria registros' });
+  add('Ir a', 'globo', 'Consulta ciudadana', () => window.open('/consulta', '_blank', 'noopener'), { sub: 'Se abre en otra pestaña', claves: 'publico ciudadano' });
+  // Filtros rápidos
+  Object.entries(ESTADOS).forEach(([k, t]) => add('Filtrar', 'filtro', `Estado: ${t}`, () => filtrar('f-estado', k), { chip: k }));
+  Object.entries(MATERIAS).forEach(([k, t]) => add('Filtrar', 'filtro', `Materia: ${t}`, () => filtrar('f-materia', k)));
+  add('Filtrar', 'filtro', 'Plazos de los próximos 7 días', async () => {
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    await enBandeja(); $('f-desde').value = iso(new Date()); $('f-hasta').value = iso(new Date(Date.now() + 7 * 864e5)); cargarBandeja();
+  }, { claves: 'vence pronto alerta semana' });
+  add('Filtrar', 'filtro', 'Quitar todos los filtros', async () => { await enBandeja(); $('btn-limpiar').click(); }, { claves: 'limpiar borrar' });
+  add('Sesión', 'salir', 'Cerrar sesión', () => location.reload(), { claves: 'salir logout' });
+  return c;
+}
+
+function pintarCmd() {
+  const q = norm($('cmd-q').value.trim());
+  const palabras = q.split(/\s+/).filter(Boolean);
+  const coincide = (t) => palabras.every((p) => t.includes(p));
+  const exp = cmdExp.filter((e) => coincide(norm(`${e.numero} ${e.demandante} ${e.demandado} ${materia(e.materia)} ${ESTADOS[e.estado]}`)))
+    .slice(0, q ? 6 : 4).map((e) => ({ grupo: q ? 'Expedientes' : 'Expedientes recientes', icono: 'exp', titulo: `${e.demandante} vs. ${e.demandado}`, sub: `${e.numero} · ${materia(e.materia)}`, mono: true, chip: e.estado, accion: () => abrirDetalle(e.id) }));
+  const cmds = comandos().filter((c) => coincide(norm(`${c.grupo} ${c.titulo} ${c.sub || ''} ${c.claves || ''}`)));
+  // Sin texto: lo contextual primero, luego expedientes; con texto: expedientes primero
+  const alFinal = (c) => ['Filtrar', 'Sesión'].includes(c.grupo);
+  cmdItems = q ? [...exp, ...cmds] : [...cmds.filter((c) => !alFinal(c)), ...exp, ...cmds.filter(alFinal)];
+  cmdSel = Math.min(cmdSel, Math.max(cmdItems.length - 1, 0));
+  let grupo = '', html = '';
+  cmdItems.forEach((it, i) => {
+    if (it.grupo !== grupo) { grupo = it.grupo; html += `<li class="cmd-grupo" role="presentation">${esc(grupo)}</li>`; }
+    html += `<li id="cmd-i-${i}" class="cmd-item" role="option" aria-selected="${i === cmdSel}" data-i="${i}">
+      <span class="cmd-ico">${ico(it.icono)}</span>
+      <span class="cmd-txt"><span>${esc(it.titulo)}</span>${it.sub ? `<small${it.mono ? ' class="mono"' : ''}>${esc(it.sub)}</small>` : ''}</span>
+      ${it.chip ? chip(it.chip) : ''}${it.atajo ? `<kbd>${esc(it.atajo)}</kbd>` : ''}<span class="cmd-enter" aria-hidden="true">↵</span></li>`;
+  });
+  $('cmd-lista').innerHTML = html || `<li class="cmd-vacio" role="presentation">Nada coincide con «${esc($('cmd-q').value.trim())}».</li>`;
+  $('cmd-q').setAttribute('aria-activedescendant', cmdItems.length ? `cmd-i-${cmdSel}` : '');
+  $('cmd-lista').querySelectorAll('.cmd-item').forEach((li) => {
+    li.addEventListener('mousemove', () => { if (cmdSel !== +li.dataset.i) { cmdSel = +li.dataset.i; marcarCmd(); } });
+    li.addEventListener('click', () => ejecutarCmd(+li.dataset.i));
+  });
+}
+function marcarCmd() {
+  $('cmd-lista').querySelectorAll('.cmd-item').forEach((li) => li.setAttribute('aria-selected', +li.dataset.i === cmdSel));
+  $('cmd-q').setAttribute('aria-activedescendant', `cmd-i-${cmdSel}`);
+  const el = $(`cmd-i-${cmdSel}`); if (el) el.scrollIntoView({ block: 'nearest' });
+}
+async function abrirCmd() {
+  if (!token || !$('cmd').classList.contains('hidden')) return;
+  cmdVolver = document.activeElement;
+  $('cmd').classList.remove('hidden');
+  $('cmd-q').value = ''; cmdSel = 0;
+  pintarCmd(); $('cmd-q').focus();
+  try { cmdExp = await api('/api/expedientes'); if (!$('cmd').classList.contains('hidden')) pintarCmd(); } catch (_) { /* la paleta funciona sin la lista */ }
+}
+function cerrarCmd(devolverFoco = true) {
+  $('cmd').classList.add('hidden');
+  if (devolverFoco && cmdVolver && document.contains(cmdVolver)) cmdVolver.focus();
+}
+function ejecutarCmd(i) {
+  const it = cmdItems[i]; if (!it) return;
+  cerrarCmd(false);
+  it.accion();
+}
+$('cmd-abrir').addEventListener('click', abrirCmd);
+$('cmd-q').addEventListener('input', () => { cmdSel = 0; pintarCmd(); });
+$('cmd-q').addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (cmdItems.length) { cmdSel = (cmdSel + (e.key === 'ArrowDown' ? 1 : -1) + cmdItems.length) % cmdItems.length; marcarCmd(); }
+  } else if (e.key === 'Enter') { e.preventDefault(); ejecutarCmd(cmdSel); }
+  else if (e.key === 'Escape') { e.preventDefault(); cerrarCmd(); }
+  else if (e.key === 'Tab') e.preventDefault();
+});
+$('cmd').addEventListener('mousedown', (e) => { if (e.target === $('cmd')) cerrarCmd(); });
+document.addEventListener('keydown', (e) => {
+  const enCampo = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName);
+  const sinMod = !e.ctrlKey && !e.metaKey && !e.altKey;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('cmd').classList.contains('hidden') ? abrirCmd() : cerrarCmd(); }
+  else if (!enCampo && sinMod && e.key === '/') { e.preventDefault(); abrirCmd(); }
+  else if (!enCampo && sinMod && e.key.toLowerCase() === 'n' && token && rol === 'secretario' && $('cmd').classList.contains('hidden')) { e.preventDefault(); nuevoExpediente(); }
 });

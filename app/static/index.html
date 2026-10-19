@@ -13,12 +13,18 @@
     <svg width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" style="color:var(--acento)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
     <div><b>Expediente Judicial Digital</b><small>Órgano Judicial · República de Panamá</small></div>
   </div>
+  <nav id="nav" class="nav hidden" aria-label="Secciones"></nav>
   <div id="sesion" class="sesion hidden"><span id="avatar" class="avatar" aria-hidden="true"></span><span id="quien"></span><button class="btn-sec" id="btn-salir" type="button">Salir</button></div>
 </header>
 <div class="cuerpo">
-<nav id="nav" class="nav hidden" aria-label="Secciones"></nav>
-
 <main>
+  <!-- BARRA DE COMANDOS: punto de entrada principal -->
+  <button id="cmd-abrir" class="cmd-barra hidden" type="button" aria-haspopup="dialog" aria-controls="cmd">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>
+    <span>Busca un expediente, filtra o ejecuta una acción…</span>
+    <kbd class="cmd-atajo"></kbd>
+  </button>
+
   <!-- INICIO DE SESIÓN (HU-02) -->
   <section id="v-login" class="login">
     <div style="display:flex;flex-direction:column;gap:16px">
@@ -42,9 +48,14 @@
   <section id="v-bandeja" class="hidden" style="display:flex;flex-direction:column;gap:20px">
     <div class="fila">
       <div><h1 id="b-titulo">Bandeja de expedientes</h1><div id="b-sub" class="sub"></div></div>
-      <label class="campo" for="buscar" style="min-width:260px">Buscar<input id="buscar" placeholder="Número o nombre de una parte"></label>
+      <div class="acciones-bandeja">
+        <label class="campo" for="buscar"><span class="sr">Buscar</span><input id="buscar" placeholder="Número o nombre de una parte"></label>
+        <button id="btn-filtros" class="btn-sec" type="button" aria-expanded="false" aria-controls="f-filtros">Filtros</button>
+        <button id="btn-nuevo" class="btn hidden" type="button" aria-expanded="false" aria-controls="f-nuevo">+ Nuevo</button>
+      </div>
     </div>
-    <form id="f-filtros" class="panel filtros" aria-label="Filtros de la bandeja" novalidate>
+    <div id="f-activos" class="activos"></div>
+    <form id="f-filtros" class="panel filtros hidden" aria-label="Filtros de la bandeja" novalidate>
       <label class="campo" for="f-estado">Estado<select id="f-estado"><option value="">Todos</option><option value="radicado">Radicado</option><option value="en_tramite">En trámite</option><option value="en_audiencia">En audiencia</option><option value="con_sentencia">Con sentencia</option><option value="archivado">Archivado</option></select></label>
       <label class="campo" for="f-materia">Materia<select id="f-materia"><option value="">Todas</option><option value="civil">Civil</option><option value="familia">Familia</option><option value="laboral">Laboral</option><option value="penal">Penal</option></select></label>
       <label class="campo hidden" id="l-f-juez" for="f-juez">Juez<select id="f-juez"><option value="">Todos</option></select></label>
@@ -152,6 +163,17 @@
   <span>MVP · Equipo 1 · Ingeniería de Software III</span>
   <span>Python · Robot Framework · OpenVAS · Kubernetes</span>
 </footer>
+<div id="cmd" class="cmd-capa hidden" role="dialog" aria-modal="true" aria-label="Barra de comandos">
+  <div class="cmd-caja">
+    <div class="cmd-entrada">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>
+      <input id="cmd-q" type="text" role="combobox" aria-expanded="true" aria-controls="cmd-lista" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Escribe un número, una parte o una acción…">
+      <kbd>Esc</kbd>
+    </div>
+    <ul id="cmd-lista" class="cmd-lista" role="listbox" aria-label="Resultados"></ul>
+    <div class="cmd-pie"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>↵</kbd> ejecutar</span><span><kbd>Esc</kbd> cerrar</span></div>
+  </div>
+</div>
 <script src="/static/app.js"></script>
 </body>
 </html>
