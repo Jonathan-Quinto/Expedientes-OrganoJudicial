@@ -6,13 +6,16 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="ventana">
 <header class="top">
+  <div class="semaforo" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="marca">
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#3ee0c0" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" style="color:var(--acento)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
     <div><b>Expediente Judicial Digital</b><small>Órgano Judicial · República de Panamá</small></div>
   </div>
-  <div id="sesion" class="sesion hidden"><span id="quien"></span><button class="btn-sec" id="btn-salir" type="button">Salir</button></div>
+  <div id="sesion" class="sesion hidden"><span id="avatar" class="avatar" aria-hidden="true"></span><span id="quien"></span><button class="btn-sec" id="btn-salir" type="button">Salir</button></div>
 </header>
+<div class="cuerpo">
 <nav id="nav" class="nav hidden" aria-label="Secciones"></nav>
 
 <main>
@@ -25,7 +28,8 @@
       <div class="pilares"><span>Trazabilidad</span><span>Control por roles</span><span>Auditoría + seguridad</span></div>
     </div>
     <form id="f-login" class="caja-login">
-      <h2 style="font-size:20px">Acceso de funcionarios</h2>
+      <div class="icono-app"><svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg></div>
+      <h2 style="font-size:18px">Acceso de funcionarios</h2>
       <label class="campo" for="l-user">Usuario<input id="l-user" autocomplete="username" placeholder="secretario1, juez1, abogado1 o admin1" required></label>
       <label class="campo" for="l-pass">Contraseña<input id="l-pass" type="password" autocomplete="current-password" required></label>
       <div id="l-error" class="error" role="alert"></div>
@@ -130,7 +134,7 @@
   <section id="v-auditoria" class="hidden" style="display:flex;flex-direction:column;gap:18px">
     <div class="fila">
       <div><h1>Bitácora de auditoría</h1><div class="sub">Cada acción queda encadenada con un hash SHA-256 del registro anterior.</div></div>
-      <button id="btn-verificar" class="btn-sec" type="button" style="min-height:44px">Verificar integridad</button>
+      <button id="btn-verificar" class="btn-sec" type="button">Verificar integridad</button>
     </div>
     <div id="a-integridad" role="status"></div>
     <div class="tabla">
@@ -141,6 +145,8 @@
     </div>
   </section>
 </main>
+</div>
+</div>
 
 <footer class="pie-app">
   <span>MVP · Equipo 1 · Ingeniería de Software III</span>

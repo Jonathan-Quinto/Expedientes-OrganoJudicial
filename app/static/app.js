@@ -10,6 +10,10 @@ const ROLES = { secretario: 'Secretario judicial', juez: 'Juez', admin: 'Adminis
 const TIPOS = { radicacion: 'Radicación', cambio_estado: 'Cambio de estado' };
 const ACCIONES = { CREAR_EXPEDIENTE: 'Creó el expediente', CONSULTAR_EXPEDIENTE: 'Consultó', CAMBIAR_ESTADO: 'Cambió el estado', AGREGAR_ACTUACION: 'Agregó una actuación', LOGIN: 'Inició sesión', LOGIN_FALLIDO: 'Intento de acceso fallido', CONSULTA_PUBLICA: 'Consulta pública', CONSULTA_PUBLICA_FALLIDA: 'Consulta pública fallida' };
 const accionTxt = (a) => ACCIONES[a] || String(a || '').toLowerCase().replace(/_/g, ' ');
+const ICONOS = {
+  bandeja: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h4l1 1.5h8v7.5h-13z"/><path d="M1.5 4.5v-2h5l1 1.5"/></svg>',
+  auditoria: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5 2.5 3.5v4c0 3.5 2.4 5.9 5.5 7 3.1-1.1 5.5-3.5 5.5-7v-4z"/><path d="m5.5 8 1.8 1.8L10.5 6.5"/></svg>',
+};
 const chip = (e) => `<span class="chip ${esc(e)}">${esc(ESTADOS[e] || e)}</span>`;
 const materia = (m) => MATERIAS[m] || m;
 const fecha = (d) => d ? d.split('-').reverse().join('/') : '—';
@@ -50,7 +54,7 @@ function pintarNav() {
   const items = rol === 'admin'
     ? [['auditoria', 'Bitácora de auditoría'], ['bandeja', 'Expedientes']]
     : [['bandeja', rol === 'juez' ? 'Mis expedientes' : rol === 'abogado' ? 'Mis casos' : 'Bandeja de expedientes']];
-  nav.innerHTML = items.map(([v, t]) => `<button type="button" data-v="${v}" class="${vista === v || (v === 'bandeja' && vista === 'detalle') ? 'activo' : ''}">${t}</button>`).join('');
+  nav.innerHTML = items.map(([v, t]) => `<button type="button" data-v="${v}" class="${vista === v || (v === 'bandeja' && vista === 'detalle') ? 'activo' : ''}">${ICONOS[v]}${t}</button>`).join('');
   nav.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => (b.dataset.v === 'auditoria' ? abrirAuditoria() : abrirBandeja())));
   nav.classList.remove('hidden');
 }
@@ -63,6 +67,7 @@ $('f-login').addEventListener('submit', async (e) => {
     const t = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: $('l-user').value.trim(), password: $('l-pass').value }) });
     token = t.access_token; rol = t.rol; nombre = t.nombre;
     $('quien').innerHTML = `${esc(nombre)} · <em>${esc(ROLES[rol] || rol)}</em>`;
+    $('avatar').textContent = nombre.replace(/^(Lcd[oa]\.|Lic\.|Dr[a]?\.|Juez[a]?)\s+/i, '').split(/\s+/).slice(0, 2).map((x) => x[0] || '').join('').toUpperCase();
     $('sesion').classList.remove('hidden');
     $('f-nuevo').classList.toggle('hidden', rol !== 'secretario');
     $('l-f-juez').classList.toggle('hidden', !['secretario', 'admin'].includes(rol));
@@ -288,13 +293,13 @@ async function cargarAuditoria() {
   const reg = await api('/api/auditoria?limite=50');
   $('a-tabla').innerHTML = reg.map((r) => `<tr><td class="mono" style="font-size:12px;white-space:nowrap">${fechaHora(r.fecha)}</td><td>${esc(r.usuario)}</td>
     <td><span class="accion ${esc(r.accion)}">${esc(r.accion)}</span></td><td class="mono" style="font-size:12px">${esc(r.entidad)} #${esc(r.entidad_id)}</td>
-    <td class="sub">${esc(cambio(r))}</td><td class="mono" style="font-size:12px;color:#7d8aa3">${esc(r.hash.slice(0, 8))}…</td></tr>`).join('');
+    <td class="sub">${esc(cambio(r))}</td><td class="hash">${esc(r.hash.slice(0, 8))}…</td></tr>`).join('');
 }
 
 $('btn-verificar').addEventListener('click', async () => {
   const v = await api('/api/auditoria/verificar');
   $('a-integridad').innerHTML = v.integra
     ? `<div class="ok">Cadena íntegra: ${v.registros} registros verificados, ninguno alterado.</div>`
-    : `<div class="ok" style="background:#3d1d22;border-color:#7a2f38;color:#ff9c9c">Bitácora alterada en el registro #${v.roto_en_id}.</div>`;
+    : `<div class="ok mal">Bitácora alterada en el registro #${v.roto_en_id}.</div>`;
   cargarAuditoria();
 });

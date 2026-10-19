@@ -6,18 +6,20 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="ventana">
 <header class="top">
+  <div class="semaforo" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="marca">
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#3ee0c0" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" style="color:var(--acento)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 5v22M9 27h14M6 9h20M6 9l-3.5 8h7L6 9zM26 9l-3.5 8h7L26 9z"/><path d="M2.5 17a3.5 2 0 0 0 7 0M22.5 17a3.5 2 0 0 0 7 0"/></svg>
     <div><b>Expediente Judicial Digital</b><small>Órgano Judicial · República de Panamá</small></div>
   </div>
-  <a href="/" style="font-size:13px">Acceso funcionarios</a>
+  <a href="/" style="font-size:12px">Acceso funcionarios</a>
 </header>
 <main>
   <section class="consulta">
     <div class="eyebrow">Consulta pública</div>
     <h1>¿En qué estado está mi proceso?</h1>
-    <form id="f" class="panel" style="padding:22px;border-radius:12px">
+    <form id="f" class="caja-login">
       <label class="campo" for="numero">Número de expediente<input id="numero" class="mono" placeholder="EXP-2026-000001" required></label>
       <label class="campo" for="codigo">Código de consulta<input id="codigo" class="mono" placeholder="8 caracteres" required></label>
       <button class="btn" type="submit">Consultar</button>
@@ -25,6 +27,7 @@
     </form>
   </section>
 </main>
+</div>
 <footer class="pie-app">
   <span>MVP · Equipo 1 · Ingeniería de Software III</span>
   <span>Python · Robot Framework · OpenVAS · Kubernetes</span>
