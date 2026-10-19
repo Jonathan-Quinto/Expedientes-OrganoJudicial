@@ -35,9 +35,14 @@ def registrar(
     entidad_id: str | int,
     antes: dict | None = None,
     despues: dict | None = None,
+    expediente_id: int | None = None,
     request: Request | None = None,
 ) -> Auditoria:
-    """Agrega un registro a la bitácora. Se llama dentro de la misma transacción del cambio."""
+    """Agrega un registro a la bitácora. Se llama dentro de la misma transacción del cambio.
+
+    `expediente_id` solo sirve para filtrar la bitácora por expediente y NO entra en
+    el cálculo del hash (así la cadena existente y /api/auditoria/verificar siguen íntegras).
+    """
     from .models import ahora
 
     ultimo = db.query(Auditoria).order_by(Auditoria.id.desc()).first()
@@ -47,6 +52,7 @@ def registrar(
         accion=accion,
         entidad=entidad,
         entidad_id=str(entidad_id),
+        expediente_id=expediente_id,
         antes=json.dumps(antes or {}, ensure_ascii=False, default=str, sort_keys=True),
         despues=json.dumps(despues or {}, ensure_ascii=False, default=str, sort_keys=True),
         ip=(request.client.host if request and request.client else ""),

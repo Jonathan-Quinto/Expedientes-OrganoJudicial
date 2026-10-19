@@ -39,12 +39,14 @@ class ExpedienteIn(BaseModel):
     demandado: str = Field(min_length=3, max_length=160)
     descripcion: str = Field(default="", max_length=5000)
     juez_id: int | None = None
+    abogado_id: int | None = None
     fecha_limite: date | None = None
 
 
 class ExpedienteUpdate(BaseModel):
     descripcion: str | None = Field(default=None, max_length=5000)
     juez_id: int | None = None
+    abogado_id: int | None = None
     fecha_limite: date | None = None
 
 
@@ -77,6 +79,7 @@ class ExpedienteOut(BaseModel):
     descripcion: str
     estado: EstadoExpediente
     juez_id: int | None
+    abogado_id: int | None
     fecha_limite: date | None
     creado_en: datetime
     actualizado_en: datetime
@@ -106,6 +109,7 @@ class AuditoriaOut(BaseModel):
     accion: str
     entidad: str
     entidad_id: str
+    expediente_id: int | None = None
     antes: str
     despues: str
     ip: str

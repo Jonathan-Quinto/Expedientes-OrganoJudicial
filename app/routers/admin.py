@@ -23,6 +23,12 @@ def listar_jueces(db: Session = Depends(get_db), _: Usuario = Depends(requiere_r
     return db.query(Usuario).filter_by(rol=Rol.juez, activo=True).all()
 
 
+@router.get("/abogados", response_model=list[UsuarioOut])
+def listar_abogados(db: Session = Depends(get_db), _: Usuario = Depends(requiere_rol(Rol.secretario, Rol.admin))):
+    """Para el selector de abogado al crear/editar un expediente."""
+    return db.query(Usuario).filter_by(rol=Rol.abogado, activo=True).all()
+
+
 @router.post("/usuarios", response_model=UsuarioOut, status_code=201)
 def crear_usuario(datos: UsuarioIn, request: Request, db: Session = Depends(get_db),
                   admin: Usuario = Depends(solo_admin)):

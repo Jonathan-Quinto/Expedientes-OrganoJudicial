@@ -21,6 +21,7 @@ def ahora() -> datetime:
 class Rol(str, enum.Enum):
     juez = "juez"
     secretario = "secretario"
+    abogado = "abogado"
     admin = "admin"
 
 
@@ -53,13 +54,15 @@ class Expediente(Base):
     descripcion: Mapped[str] = mapped_column(Text, default="")
     estado: Mapped[EstadoExpediente] = mapped_column(Enum(EstadoExpediente), default=EstadoExpediente.radicado)
     juez_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+    abogado_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)  # abogado de parte
     fecha_limite: Mapped[date | None] = mapped_column(Date, nullable=True)  # próximo plazo procesal (PB-06)
     codigo_consulta: Mapped[str] = mapped_column(String(20))  # lo recibe el ciudadano para consulta pública (PB-05)
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora)
     actualizado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora, onupdate=ahora)
 
     actuaciones: Mapped[list["Actuacion"]] = relationship(back_populates="expediente", order_by="Actuacion.id")
-    juez: Mapped[Usuario | None] = relationship()
+    juez: Mapped[Usuario | None] = relationship(foreign_keys=[juez_id])
+    abogado: Mapped[Usuario | None] = relationship(foreign_keys=[abogado_id])
 
 
 class Actuacion(Base):
@@ -89,6 +92,7 @@ class Auditoria(Base):
     accion: Mapped[str] = mapped_column(String(60))  # LOGIN_OK, CREAR_EXPEDIENTE, CAMBIAR_ESTADO...
     entidad: Mapped[str] = mapped_column(String(40))
     entidad_id: Mapped[str] = mapped_column(String(40))
+    expediente_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # fuera del hash
     antes: Mapped[str] = mapped_column(Text, default="")  # JSON
     despues: Mapped[str] = mapped_column(Text, default="")  # JSON
     ip: Mapped[str] = mapped_column(String(64), default="")
