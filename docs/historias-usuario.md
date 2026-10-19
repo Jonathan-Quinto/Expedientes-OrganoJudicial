@@ -19,9 +19,9 @@ Fuentes: `README.md` (backlog PB-01 a PB-07), `app/routers/*.py` (auth, expedien
 | HU-04 | Consulta pública del ciudadano | Implementada | Alta | 3 | Daniela Anaya | Javier Pravia |
 | HU-05 | Juez gestiona el estado del expediente | Implementada | Alta | 3 | Javier Pravia | Daniela Anaya |
 | HU-06 | Alertas de plazo | Implementada | Alta | 2 | Daniela Anaya | Javier Pravia |
-| HU-07 | Abogado consulta sus expedientes y registra escritos | En desarrollo – Sprint 5 (Planificada) | Alta | 5 | Javier Pravia | Daniela Anaya |
-| HU-08 | Bandeja con filtros | En desarrollo – Sprint 5 (Planificada) | Media | 3 | Daniela Anaya | Javier Pravia |
-| HU-09 | Historial de auditoría en el detalle del expediente | En desarrollo – Sprint 5 (Planificada) | Media | 3 | Daniela Anaya | Javier Pravia |
+| HU-07 | Abogado consulta sus expedientes y registra escritos | Implementada – Sprint 5 | Alta | 5 | Javier Pravia | Daniela Anaya |
+| HU-08 | Bandeja con filtros | Implementada – Sprint 5 | Media | 3 | Daniela Anaya | Javier Pravia |
+| HU-09 | Historial de auditoría en el detalle del expediente | Implementada – Sprint 5 | Media | 3 | Daniela Anaya | Javier Pravia |
 | HU-10 | Adjuntar documentos PDF con hash SHA-256 | Postergada / en rama del equipo | Baja | No estimada | Equipo humano (otra rama) | — |
 
 Responsables transversales: **Leonardo Liang (PO)** acepta cada HU · **Jonathan Quinto (SM)** facilita el refinamiento · **Edwin Cisneros (QA)** define y ejecuta las pruebas Robot de cada HU.
@@ -242,7 +242,7 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 
 ## HU-07: Abogado consulta sus expedientes y registra escritos
 
-**Estado:** En desarrollo – Sprint 5 (Planificada: no existe en el código) · **Backlog:** PB-01 (extensión) · **Prioridad:** Alta · **Puntos:** 5 · **Responsable:** Javier Pravia (Backend), apoyo Daniela Anaya
+**Estado:** Implementada – Sprint 5 (rol `abogado`, `Expediente.abogado_id`, `GET /api/abogados`) · **Backlog:** PB-01 (extensión) · **Prioridad:** Alta · **Puntos:** 5 · **Responsable:** Javier Pravia (Backend), apoyo Daniela Anaya
 
 **Historia**
 - **Como** abogado,
@@ -274,7 +274,7 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 
 ## HU-08: Bandeja con filtros
 
-**Estado:** En desarrollo – Sprint 5 (Planificada parcialmente: `GET /api/expedientes` filtra por `estado` y `q`; faltan materia, juez y rango de plazo) · **Backlog:** PB-01 (extensión) · **Prioridad:** Media · **Puntos:** 3 · **Responsable:** Daniela Anaya (interfaz), apoyo Javier Pravia (filtros)
+**Estado:** Implementada – Sprint 5 (`GET /api/expedientes` con `q`, `estado`, `materia`, `juez_id`, `plazo_desde`, `plazo_hasta`) · **Backlog:** PB-01 (extensión) · **Prioridad:** Media · **Puntos:** 3 · **Responsable:** Daniela Anaya (interfaz), apoyo Javier Pravia (filtros)
 
 **Historia**
 - **Como** secretario o admin,
@@ -286,9 +286,9 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 1. **Dado** que hay expedientes en varios estados, **cuando** filtro por `estado` = `en_tramite`, **entonces** la lista solo incluye expedientes `en_tramite`.
 2. **Dado** que filtro por `materia` = `civil`, **cuando** consulto, **entonces** solo aparecen expedientes de materia civil.
 3. **Dado** que filtro por `juez_id`, **cuando** consulto, **entonces** solo aparecen los expedientes de ese juez.
-4. **Dado** que filtro por rango de plazo (`fecha_desde` a `fecha_hasta`), **cuando** consulto, **entonces** solo aparecen los expedientes con `fecha_limite` dentro del rango; los que no tienen `fecha_limite` quedan fuera.
+4. **Dado** que filtro por rango de plazo (`plazo_desde` a `plazo_hasta`), **cuando** consulto, **entonces** solo aparecen los expedientes con `fecha_limite` dentro del rango; los que no tienen `fecha_limite` quedan fuera.
 5. **Dado** que `juez1` aplica el filtro `juez_id` = de `juez2`, **cuando** consulta, **entonces** la lista no incluye expedientes de `juez2` (un juez siempre ve solo los suyos).
-6. **Dado** que `fecha_desde` es posterior a `fecha_hasta`, **cuando** consulto, **entonces** recibo `422`.
+6. **Dado** que `plazo_desde` es posterior a `plazo_hasta`, **cuando** consulto, **entonces** recibo `422`. *(Pendiente: hoy la API devuelve lista vacía; la pantalla sí lo valida. Observación DEF-03 candidata, por confirmar con el PO.)*
 
 **Reglas de negocio**
 - RN-08.1: los filtros se combinan con AND.
@@ -307,7 +307,7 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 
 ## HU-09: Historial de auditoría en el detalle del expediente
 
-**Estado:** En desarrollo – Sprint 5 (Planificada: hoy la bitácora solo es accesible al admin y no está en el detalle) · **Backlog:** PB-03 · **Prioridad:** Media · **Puntos:** 3 · **Responsable:** Daniela Anaya (vista), apoyo Javier Pravia (endpoint)
+**Estado:** Implementada – Sprint 5 (`GET /api/expedientes/{id}/auditoria` y pestaña Auditoría en el detalle) · **Backlog:** PB-03 · **Prioridad:** Media · **Puntos:** 3 · **Responsable:** Daniela Anaya (vista), apoyo Javier Pravia (endpoint)
 
 **Historia**
 - **Como** admin, secretario o juez dueño del expediente,
@@ -320,13 +320,13 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 2. **Dado** que `juez1` es dueño del expediente, **cuando** abre su detalle, **entonces** ve el mismo historial.
 3. **Dado** que `juez2` no es dueño del expediente, **cuando** intenta ver el historial, **entonces** recibe `403`.
 4. **Dado** que estoy autenticado como `abogado1`, **cuando** abro el detalle, **entonces** el historial no se muestra (negativo de rol).
-5. **Dado** que el expediente tiene varios cambios, **cuando** veo el historial, **entonces** aparecen en orden del más reciente al más antiguo.
+5. **Dado** que el expediente tiene varios cambios, **cuando** veo el historial, **entonces** aparecen en orden cronológico (del más antiguo al más reciente), igual que la cadena de hashes.
 
 **Reglas de negocio**
 - RN-09.1: el historial incluye los registros cuyo `entidad` = `expediente` y `entidad_id` = id del expediente.
 - RN-09.2 (**decisión pendiente con el PO**): ¿las consultas (`CONSULTAR_EXPEDIENTE`) se muestran en el historial o solo los cambios?
 - RN-09.3 (**supuesto**): la IP solo la ve el admin.
-- RN-09.4: el endpoint de historial por expediente aún no existe (propuesta: `GET /api/expedientes/{id}/historial`, a definir con Javier).
+- RN-09.4: el endpoint es `GET /api/expedientes/{id}/auditoria` (admin, secretario y juez dueño; el abogado recibe 403).
 
 **Riesgos**
 
@@ -360,9 +360,9 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 | HU-04 | PB-05 (PB-04 en cabeceras) | `app/routers/publico.py` · `GET /api/publico/consulta`; `static/consulta.*` | `04_consulta_publica.robot` · PB-05 | Implementada |
 | HU-05 | PB-01 y PB-03 | `app/routers/expedientes.py` · `POST /api/expedientes/{id}/estado` | `02_expedientes.robot` · PB-01; `03_auditoria.robot` · PB-03 | Implementada |
 | HU-06 | PB-06 | `app/routers/expedientes.py` · `GET /api/expedientes/alertas` | `02_expedientes.robot` · PB-06 (prueba débil, ver R-06.1) | Implementada |
-| HU-07 | PB-01 (extensión) | Pendiente: rol `abogado` y patrocinio en `app/models.py`; `app/routers/expedientes.py` | pendiente qa-robot | En desarrollo – Sprint 5 (Planificada) |
-| HU-08 | PB-01 (extensión) | `app/routers/expedientes.py` · `GET /api/expedientes` (`estado` y `q` existen; faltan materia, juez y plazo) | pendiente qa-robot | En desarrollo – Sprint 5 (Planificada) |
-| HU-09 | PB-03 | `app/routers/admin.py` · `GET /api/auditoria` (solo admin); historial por expediente pendiente | pendiente qa-robot | En desarrollo – Sprint 5 (Planificada) |
+| HU-07 | PB-01 (extensión) | `app/models.py` (`Rol.abogado`, `abogado_id`), `app/routers/expedientes.py` · `_obtener`, `GET /api/abogados` | `05_abogado.robot` · HU-07 | Implementada – Sprint 5 |
+| HU-08 | PB-01 (extensión) | `app/routers/expedientes.py` · `GET /api/expedientes` (q, estado, materia, juez_id, plazo_desde, plazo_hasta) | `06_filtros.robot` · HU-08 | Implementada – Sprint 5 |
+| HU-09 | PB-03 | `app/routers/expedientes.py` · `GET /api/expedientes/{id}/auditoria`; `app/audit.py` (`expediente_id`) | `07_auditoria_expediente.robot` · HU-09 | Implementada – Sprint 5 |
 | HU-10 | Sin PB | Sin archivo | Sin prueba | Postergada / en rama del equipo |
 
 ---
@@ -389,17 +389,18 @@ Puntos: propuesta de este documento; se confirman en el planning del Sprint 5.
 
 ## Métricas QA por HU
 
-Se llena con resultados reales del orquestador. No incluir datos estimados.
+Resultados reales de la ejecución del 2026-10-19 (`robot tests/robot` sobre base nueva: 50 ejecutados, 50 pasados). La asignación de cada caso a una HU se hizo por el contenido de la prueba. Los defectos vienen de `tests/DEFECTOS.md`; pytest (42 casos, 40 pasados y 2 xfail) no se desglosa por HU.
 
-| HU | Casos | Pasados | Fallados | Defectos |
+| HU | Casos Robot | Pasados | Fallados | Defectos abiertos |
 |---|---|---|---|---|
-| HU-01 | | | | |
-| HU-02 | | | | |
-| HU-03 | | | | |
-| HU-04 | | | | |
-| HU-05 | | | | |
-| HU-06 | | | | |
-| HU-07 | | | | |
-| HU-08 | | | | |
-| HU-09 | | | | |
-| HU-10 | | | | |
+| HU-01 | 7 (02: 4 · 07: 3 de PATCH) | 7 | 0 | DEF-02 (Alta) |
+| HU-02 | 7 (01) | 7 | 0 | — |
+| HU-03 | 4 (03: 3 · 07: 1 de integridad) | 4 | 0 | — |
+| HU-04 | 5 (04) | 5 | 0 | — |
+| HU-05 | 2 (02) | 2 | 0 | DEF-01 (Media) |
+| HU-06 | 2 (02: 1 · 07: 1) | 2 | 0 | — |
+| HU-07 | 8 (05) | 8 | 0 | — |
+| HU-08 | 9 (06) | 9 | 0 | Observación DEF-03 (candidata, Baja) |
+| HU-09 | 6 (07) | 6 | 0 | — |
+| HU-10 | 0 (postergada) | — | — | — |
+| **Total** | **50** | **50** | **0** | **2 abiertos + 1 candidato** |
