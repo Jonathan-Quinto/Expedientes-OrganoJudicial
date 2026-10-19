@@ -1,0 +1,12 @@
+# EJEMPLO para producción real: sin usuarios demo. Aplicar en lugar de k8s/01-configmap.yaml.
+# El pipeline de CI/staging NO usa este archivo (Robot necesita SEED_DEMO="1").
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: expediente-judicial
+data:
+  ALERTA_DIAS: "5"
+  JWT_EXPIRE_MINUTES: "60"
+  APP_ENV: "produccion"
+  SEED_DEMO: "0"

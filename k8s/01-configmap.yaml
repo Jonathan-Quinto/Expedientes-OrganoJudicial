@@ -6,4 +6,7 @@ metadata:
 data:
   ALERTA_DIAS: "5"
   JWT_EXPIRE_MINUTES: "60"
-  SEED_DEMO: "1"          # en producción real: "0"
+  APP_ENV: "produccion"   # exige JWT_SECRET >= 32 caracteres (el pipeline genera 64 hex con openssl)
+  # STAGING/CI: "1" porque Robot Framework corre contra el cluster y necesita los usuarios demo.
+  # PRODUCCIÓN real: "0" (ver k8s/produccion/01-configmap.yaml).
+  SEED_DEMO: "1"

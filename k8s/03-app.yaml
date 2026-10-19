@@ -15,9 +15,11 @@ spec:
     metadata:
       labels: {app: expediente-api}
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
       containers:
         - name: api
           image: expediente-api:latest   # el pipeline lo reemplaza por la imagen con el SHA del commit
@@ -30,6 +32,10 @@ spec:
               valueFrom: {secretKeyRef: {name: app-secrets, key: JWT_SECRET}}
             - name: DATABASE_URL
               valueFrom: {secretKeyRef: {name: app-secrets, key: DATABASE_URL}}
+          startupProbe:
+            httpGet: {path: /healthz, port: 8000}
+            periodSeconds: 3
+            failureThreshold: 20
           readinessProbe:
             httpGet: {path: /healthz, port: 8000}
             initialDelaySeconds: 5

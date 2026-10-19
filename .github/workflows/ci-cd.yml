@@ -9,6 +9,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Lint: NO bloquea todavía (código heredado). Quitar continue-on-error cuando esté limpio.
+  lint:
+    name: Lint · ruff
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install ruff
+      - name: ruff check app
+        run: ruff check app
+        continue-on-error: true
+
   pruebas:
     name: Calidad · Robot Framework
     runs-on: ubuntu-latest
@@ -17,6 +31,21 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12", cache: pip}
       - run: pip install -r requirements-dev.txt
+      - name: Pruebas unitarias + cobertura (pytest)
+        run: |
+          pip install pytest pytest-cov
+          if [ -d tests/unit ]; then
+            pytest tests/unit --cov=app --cov-report=xml --cov-report=term
+          else
+            echo "tests/unit no existe todavía; se omite pytest"
+          fi
+      - name: Publicar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: ignore
       - name: Levantar API (SQLite)
         run: |
           uvicorn app.main:app --port 8000 &
@@ -27,6 +56,26 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with: {name: robot-local, path: results/local}
+
+  # Calidad estática: solo reporte (--exit-zero / sin umbrales), no bloquea.
+  calidad:
+    name: Calidad · radon + pylint (reporte)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt radon pylint
+      - name: Generar reportes
+        run: |
+          mkdir -p results/calidad
+          radon cc app -s -a | tee results/calidad/radon-cc.txt
+          radon mi app -s | tee results/calidad/radon-mi.txt
+          pylint app --exit-zero | tee results/calidad/pylint.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: calidad-reportes, path: results/calidad}
 
   desplegar-staging:
     name: DevOps · Docker + Kubernetes (kind)
@@ -49,6 +98,8 @@ jobs:
             --from-literal=JWT_SECRET=$(openssl rand -hex 32) \
             --from-literal=POSTGRES_PASSWORD=$PASS \
             --from-literal=DATABASE_URL=postgresql+psycopg://judicial:$PASS@postgres:5432/expedientes
+          # ConfigMap de staging: APP_ENV=produccion (JWT_SECRET de 64 hex cumple >=32) y SEED_DEMO="1"
+          # porque Robot corre contra el cluster y necesita usuarios demo. En producción real: SEED_DEMO="0".
           kubectl apply -f k8s/01-configmap.yaml
           kubectl apply -f k8s/02-postgres.yaml
           kubectl -n expediente-judicial rollout status statefulset/postgres --timeout=180s
