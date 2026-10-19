@@ -30,6 +30,24 @@ Consulta pública demo: `EXP-2026-000001` + código `A1B2C3D4`.
 
 Con PostgreSQL (como en el Sprint 0): `docker compose up --build`
 
+## Frontend (React + shadcn/ui)
+
+La interfaz está en `frontend/` (Vite + React + TypeScript + Tailwind + shadcn/ui). FastAPI sirve el build
+ya compilado desde `app/static/app/`, así que **para correr la app no hace falta Node**. Solo se necesita
+para cambiar la interfaz:
+
+```bash
+cd frontend
+npm install
+npm run dev      # http://localhost:5173 con recarga en vivo (la API debe estar corriendo en :8000)
+npm run check    # chequeo de tipos de TypeScript
+npm run build    # compila a app/static/app/ — sube ese build en el mismo commit que el cambio
+```
+
+- Barra de comandos: `Ctrl K` / `⌘K` o `/` (buscar expedientes, filtrar, acciones según el rol). `N` = nuevo expediente (secretario).
+- Si `app/static/app/` no existe, FastAPI vuelve a la interfaz HTML anterior (`app/static/index.html`).
+- Todo se sirve desde el mismo origen (fuentes incluidas), compatible con la CSP `default-src 'self'`.
+
 ## Pruebas (evidencia de calidad)
 
 Con la app corriendo en otra terminal:
@@ -80,7 +98,8 @@ La captura de la pestaña *Actions* en verde es la evidencia de DevOps de cada s
 ## Estructura
 
 ```
-app/            backend FastAPI (modelos, seguridad, auditoría, routers) + static/ (frontend)
+app/            backend FastAPI (modelos, seguridad, auditoría, routers) + static/ (build del frontend)
+frontend/       código fuente de la interfaz (React + shadcn/ui)
 tests/robot/    suites de Robot Framework por ítem del backlog
 k8s/            manifiestos de Kubernetes (namespace, config, postgres, app)
 security/       OpenVAS: guía + script de escaneo
@@ -92,4 +111,3 @@ security/       OpenVAS: guía + script de escaneo
 - Migraciones con Alembic en lugar de `create_all`.
 - Adjuntar documentos PDF al expediente (con hash SHA-256 por archivo).
 - Notificación por correo de plazos (hoy solo se muestran en el panel).
-- Frontend en React/Vue si Daniela lo prefiere; la API ya está lista.

@@ -64,11 +64,18 @@ def healthz():
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
+# Interfaz React (frontend/ compilado en static/app). Si no hay build, se usa la interfaz HTML anterior.
+SPA = STATIC / "app" / "index.html"
+
+
 @app.get("/", include_in_schema=False)
-def index():
-    return FileResponse(STATIC / "index.html")
+@app.get("/expedientes", include_in_schema=False)
+@app.get("/expedientes/{exp_id:int}", include_in_schema=False)
+@app.get("/auditoria", include_in_schema=False)
+def index(exp_id: int | None = None):
+    return FileResponse(SPA if SPA.exists() else STATIC / "index.html")
 
 
 @app.get("/consulta", include_in_schema=False)
 def consulta_page():
-    return FileResponse(STATIC / "consulta.html")
+    return FileResponse(SPA if SPA.exists() else STATIC / "consulta.html")
