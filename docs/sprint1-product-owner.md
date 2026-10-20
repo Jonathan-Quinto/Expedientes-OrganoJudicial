@@ -20,6 +20,32 @@ en la pantalla y contra la API. Suite automática: **22 tests, 22 passed, 0 fail
 Robot Demandado" en la base de la demo (`EXP-2026-000004` a `000011`). Antes de la Review hay que reiniciar
 la base (detener el servidor, borrar `expedientes.db` y arrancarlo) para que la demo se vea limpia.
 
+## 1b. Aceptación de HU-07 a HU-09 (rama `ui-react`)
+
+Probado el 19/10/2026 sobre la rama `ui-react` (commit `97a9c60`, todavía sin merge a `main`), con base nueva,
+en la interfaz React y contra la API. Suites de esa rama: **Robot 50/50 passed**, **pytest 40 passed, 2 xfailed**
+(los xfail son DEF-01 y DEF-02, defectos ya documentados). HU-01 a HU-06 siguen pasando en esa rama.
+
+| HU | Qué se probó | Resultado obtenido | Estado |
+|----|--------------|--------------------|--------|
+| HU-07 Abogado | `abogado1` lista, abre, registra un escrito, intenta cambiar estado y ver la bitácora | Ve solo sus 2 expedientes. Uno ajeno da 403. Escrito en uno propio: 201 y queda `AGREGAR_ACTUACION` en la bitácora; en uno ajeno: 403. Cambiar estado: 403. Bitácora: 403 | ✅ Aceptada |
+| HU-08 Filtros | Filtrar por estado, materia, juez y rango de plazo; `juez1` pidiendo los de `juez2`; rango invertido | Cada filtro devuelve solo lo que corresponde. `juez1` no obtiene expedientes de `juez2`. Con el rango invertido la API responde 200 con lista vacía, en vez de 422 (DEF-03) | ✅ Aceptada con observación (DEF-03, no bloquea: la pantalla sí lo valida) |
+| HU-09 Historial en el detalle | `juez1` cambia el estado; ven el historial admin, secretario, `juez1`, `juez2` y `abogado1` | Admin, secretario y `juez1`: 200, en orden cronológico. `juez2` y `abogado1`: 403. **El juez también ve la IP** de cada registro | ⚠️ Con observaciones: la IP debe verla solo el admin |
+
+### Decisiones del PO sobre los puntos pendientes
+
+| Punto | Decisión |
+|-------|----------|
+| RN-07.3: ¿quién asigna el abogado patrocinador? | **El secretario**, igual que asigna al juez. Se mantiene como está |
+| RN-08.2: ¿la materia se compara exacta? | Hoy no distingue mayúsculas ("civil" = "Civil"). **Se acepta así**, es más cómodo para el usuario |
+| DEF-03: rango de plazo invertido | La API debe responder **422**, igual que la pantalla. Corrección menor para el próximo sprint |
+| RN-09.2: ¿el historial muestra las consultas? | **Solo los cambios**, como hoy. Quién consultó cada expediente queda en la bitácora completa del admin |
+| RN-09.3: ¿quién ve la IP? | **Solo el admin.** La IP es un dato personal; para secretario y juez se oculta. Es la observación de HU-09 |
+
+**Observación adicional:** en esta rama las pruebas de Robot, además de expedientes, crean usuarios de prueba
+(`qa_abogado_...`) en la base de la demo. Antes de la Review hay que reiniciar la base. Para el próximo sprint,
+las pruebas deberían usar una base aparte.
+
 ## 2. Prioridad del próximo sprint
 
 Los documentos PDF son el trabajo de **este** sprint (Javier, Daniela y Edwin). Si el domingo no se aceptan,
