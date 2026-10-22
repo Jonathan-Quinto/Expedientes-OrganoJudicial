@@ -182,3 +182,14 @@ $('btn-verificar').addEventListener('click', async () => {
     : `<div class="ok" style="background:#3d1d22;border-color:#7a2f38;color:#ff9c9c">Bitácora alterada en el registro #${v.roto_en_id}.</div>`;
   cargarAuditoria();
 });
+
+$('btn-copiar').addEventListener('click', async () => {
+  const btn = $('btn-copiar');
+  try {
+    await navigator.clipboard.writeText($('d-numero').textContent);
+    btn.textContent = '¡Copiado!';
+  } catch {
+    btn.textContent = 'No se pudo copiar';
+  }
+  setTimeout(() => { btn.textContent = 'Copiar número'; }, 1500);
+});
